@@ -1,0 +1,10 @@
+streamlit>=1.40
+pypdf>=5.0
+openai>=1.50
+rank-bm25>=0.2.2
+numpy>=1.26
+requests>=2.31
+python-dotenv>=1.0
+# only needed to regenerate the sample PDFs / run tests
+reportlab>=4.0
+pytest>=8.0
