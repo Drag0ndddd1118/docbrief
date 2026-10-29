@@ -43,6 +43,7 @@ def report():
         Paragraph("Revenue. Product revenue was $356.9 million in fiscal 2025, an increase of 14.9% year over year. Software and services revenue grew 56.2% to $125.7 million and now represents 26.0% of total revenue. Revenue in North America was 54% of the total, Europe 31%, and Asia-Pacific 15%.", P),
         Paragraph("Margins and expenses. Gross profit was $285.0 million. Selling, general and administrative expense rose 9.8% to $131.1 million, below the pace of revenue growth, which produced operating leverage. We expect gross margin to remain in a range of 58% to 60% in fiscal 2026.", P),
         Paragraph("Cash flow and liquidity. Cash provided by operating activities was $73.9 million. Capital expenditures were $21.4 million, resulting in free cash flow of $52.5 million. We ended the year with cash and cash equivalents of $214.7 million and total debt of $120.0 million, which matures in 2029. We do not expect to need additional external financing to fund our plan.", P),
+        Paragraph("Industry context. We believe the global warehouse automation market is growing at only about 6% per year through 2030, and that e-commerce accounts for about 20% of global retail sales.", P),
         PageBreak(),
         Paragraph("Consolidated Statement of Operations (US$ millions, except per-share data)", H2),
         table([

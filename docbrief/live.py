@@ -126,6 +126,12 @@ class LiveEngine:
         )
         return _to_analysis(d, doc, self.describe() + " · map-reduce")
 
+    # ---- web fact-check (Tavily + Nemotron) -----------------------------
+    def fact_check(self, doc: Document, analysis: Analysis, search, lang: str = "en", n: int = 3):
+        from .factcheck import run_fact_check
+
+        return run_fact_check(self.llm, doc, analysis, search, LANG_NAME.get(lang, "English"), n)
+
     # ---- retrieval + Q&A ------------------------------------------------
     def build_retriever(self, chunks: list[Chunk]) -> Retriever:
         return Retriever(chunks, embedder=self.llm.embed)

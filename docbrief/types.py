@@ -42,6 +42,7 @@ class Source:
     page: Optional[int]
     text: str
     url: str = ""
+    title: str = ""  # web page title (Tavily results)
 
 
 @dataclass
@@ -49,3 +50,17 @@ class Answer:
     text: str
     sources: list[Source] = field(default_factory=list)
     engine: str = ""
+
+
+@dataclass
+class FactCheck:
+    """One document claim checked against live web results (Tavily) and reconciled by Nemotron."""
+
+    claim: str
+    page: Optional[int] = None
+    query: str = ""
+    verdict: str = "no_web_evidence"  # consistent | differs | no_web_evidence
+    pdf_says: str = ""
+    web_says: str = ""
+    explanation: str = ""
+    sources: list[Source] = field(default_factory=list)  # web sources (W1..)

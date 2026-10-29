@@ -11,3 +11,4 @@ __pycache__/
 # demo build artefacts (large)
 demo/build/
 demo/*.mp4
+.tavily_key

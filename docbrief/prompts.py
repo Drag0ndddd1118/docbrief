@@ -42,3 +42,21 @@ REWRITE_SYSTEM = (
     "Rewrite the user's question as a short English keyword search query (include synonyms and any numbers or names). "
     "Output ONLY the query."
 )
+
+CLAIMS_SYSTEM = """You are DocBrief's fact-checking planner. From the document, pick up to {n} claims that can be checked against PUBLIC web information:
+industry or market statistics (market size, growth rates, shares), macro/regulatory/benchmark facts, and publicly reported facts about REAL named companies.
+Prefer claims ABOUT THE OUTSIDE WORLD (industry, market, macro, regulation, benchmarks, other real companies) over the author's own figures.
+Never pick a company's own results (revenue, margins, customers, regional mix, guidance) unless that company is a real, publicly listed company; if the document says it is fictional, or you do not recognise the company, skip all of its own figures.
+For each claim give: the claim as stated in the document (keep its numbers), the page number (from the [[Page N]] markers), and a self-contained web search query (max 14 words, no pronouns, include the metric, region and year if relevant).
+Respond with ONE JSON object, no fences: {{"claims": [{{"claim": "...", "page": 2, "query": "..."}}]}}. Use {{"claims": []}} if nothing is checkable."""
+
+RECONCILE_SYSTEM = """You are DocBrief's fact-check judge. For each claim you get the document's own wording (with page) and web search snippets labelled [W1], [W2]…
+Decide a verdict using ONLY those snippets:
+- "consistent": the web evidence supports the claim (numbers roughly agree).
+- "differs": the web evidence materially disagrees (state both figures).
+- "no_web_evidence": the snippets do not address the claim.
+If web sources disagree with each other, compare the claim with the whole range they report: "consistent" if it falls inside the range, "differs" if it is clearly outside it.
+Never invent figures. Quote numbers exactly as they appear. Cite web snippets inline as [W1] and the document as [p.N].
+Respond with ONE JSON object, no fences:
+{"results": [{"index": 0, "verdict": "consistent|differs|no_web_evidence", "pdf_says": "short quote/paraphrase [p.N]", "web_says": "what the web says [W1]", "explanation": "one or two sentences reconciling the two", "web_refs": ["W1"]}]}
+Write pdf_says/web_says/explanation in the requested language."""

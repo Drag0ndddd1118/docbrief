@@ -10,7 +10,7 @@ from docbrief.config import Settings
 from docbrief.engine import get_engine
 from docbrief.pdf_loader import load_pdf
 from docbrief.report import to_markdown
-from docbrief.tavily import tavily_search
+from docbrief.tavily import make_search, tavily_search
 
 SAMPLES = {
     "📊 Sample: Aurora Robotics FY2025 report": Path("samples/aurora_robotics_fy2025_report.pdf"),
@@ -104,21 +104,22 @@ if R.embed_error:
 if A.tldr:
     st.info(f"**TL;DR** — {esc(A.tldr)}")
 
-VIEWS = ["Summary", "Key points", "Key metrics", "💬 Ask the document", "Source pages"]
+VIEWS = ["Summary", "Key points", "Key metrics", "🌐 Fact-check with the web", "💬 Ask the document", "Source pages"]
+V_SUM, V_PTS, V_MET, V_WEB, V_ASK, V_SRC = VIEWS
 view = st.radio("View", VIEWS, horizontal=True, label_visibility="collapsed", key="view")
 
-if view == VIEWS[0]:
+if view == V_SUM:
     st.markdown(esc(A.summary))
     if A.risks:
         st.markdown("#### ⚠️ Risks / limitations" if A.doc_type != "research_paper" else "#### ⚠️ Limitations")
         for p in A.risks:
             st.markdown(f"- {esc(p.text)}" + (f" `p.{p.page}`" if p.page else ""))
 
-if view == VIEWS[1]:
+if view == V_PTS:
     for p in A.key_points:
         st.markdown(f"- {esc(p.text)}" + (f" `p.{p.page}`" if p.page else ""))
 
-if view == VIEWS[2]:
+if view == V_MET:
     if not A.metrics:
         st.caption("No headline metrics detected for this document.")
     else:
@@ -130,7 +131,39 @@ if view == VIEWS[2]:
         n_bad = sum(1 for m in A.metrics if m.verified is False)
         st.caption("Every value is checked against the raw PDF text; anything the model reports that isn't literally in the document is flagged." + (f" **{n_bad} flagged.**" if n_bad else ""))
 
-if view == VIEWS[3]:
+if view == V_WEB:
+    st.markdown("**Don't just trust the PDF.** Nemotron picks the claims in this document that can be checked publicly (market size, growth rates, benchmarks, public-company facts), **Tavily** searches the live web for each one, and Nemotron reconciles what the PDF says with what the web says.")
+    if not (S.is_live and S.tavily_key):
+        st.info("Needs live mode and a `TAVILY_API_KEY` (see README).")
+    else:
+        fc_key = f"fc:{st.session_state['doc_key']}:{LANG}"
+        if st.button("🌐 Fact-check key claims with Tavily", type="primary"):
+            with st.spinner("Nemotron picks claims → Tavily searches the web → Nemotron reconciles…"):
+                try:
+                    st.session_state[fc_key] = ENGINE.fact_check(doc, A, make_search(S.tavily_key), lang={"auto": "en"}.get(LANG, LANG), n=3)
+                except Exception as e:
+                    st.session_state[fc_key] = None
+                    st.error(f"Fact-check failed: {e}")
+        res = st.session_state.get(fc_key)
+        if res is not None and not res:
+            st.caption("No claims in this document can be checked against public web sources (e.g. it only reports a private company's own results).")
+        BADGE = {"consistent": ("✅ Consistent with the web", st.success), "differs": ("⚠️ Differs from the web", st.warning), "no_web_evidence": ("🔍 No web evidence found", st.info)}
+        for fcx in res or []:
+            label, box = BADGE.get(fcx.verdict, BADGE["no_web_evidence"])
+            with st.container(border=True):
+                box(f"**{label}**")
+                st.markdown(f"**Claim**{' `p.' + str(fcx.page) + '`' if fcx.page else ''}: {esc(fcx.claim)}")
+                c_pdf, c_web = st.columns(2)
+                c_pdf.markdown("**📄 PDF says**  \n" + esc(fcx.pdf_says or "—"))
+                c_web.markdown("**🌐 Web says**  \n" + esc(fcx.web_says or "—"))
+                if fcx.explanation:
+                    st.markdown("**Nemotron's reconciliation:** " + esc(fcx.explanation))
+                if fcx.sources:
+                    st.caption("Web sources (Tavily) · query: " + esc(fcx.query))
+                    for w in fcx.sources:
+                        st.markdown(f"- **[{w.label}]** [{esc(w.title or w.url)}]({w.url})")
+
+if view == V_ASK:
     if A.suggested_questions and not st.session_state["chat"]:
         st.caption("Try one:")
         cols = st.columns(len(A.suggested_questions))
@@ -169,6 +202,6 @@ if view == VIEWS[3]:
                     st.markdown(f"**[{loc}]** " + esc(f"{s.text[:600]}{'…' if len(s.text) > 600 else ''}"))
         st.session_state["chat"].append({"role": "assistant", "content": ans.text, "sources": ans.sources, "engine": ans.engine})
 
-if view == VIEWS[4]:
+if view == V_SRC:
     pg = st.number_input("Page", 1, doc.n_pages, 1)
     st.text(doc.pages[pg - 1] or "(no extractable text on this page)")

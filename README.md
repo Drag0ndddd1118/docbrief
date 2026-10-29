@@ -36,7 +36,10 @@ flowchart LR
     Q[Question EN / 中文] --> W[Nemotron Nano<br/>rewrite to English search terms]
     W --> H
     H --> G[Nemotron 3 Super / Ultra<br/>answer with page citations]
-    T[Tavily web context<br/>optional] -.-> G
+    T[Tavily live web search] --> F[Nemotron 3 Super<br/>reconcile PDF vs web]
+    A2[Nemotron 3 Nano<br/>pick checkable claims] --> T
+    F --> UI
+    T -.-> G
     G --> UI
 ```
 
@@ -47,7 +50,16 @@ flowchart LR
 | **Nemotron 3 Ultra** (`nvidia/Nemotron-3-Ultra-550b-a55b`) | Optional "Deep reasoning" toggle for hard questions |
 | **Nebius Token Factory** | OpenAI-compatible inference endpoint for all of the above + embeddings |
 | **Qwen3-Embedding-8B** (Nebius) | Dense vectors for hybrid retrieval (BM25-only fallback if unavailable) |
-| **Tavily** (optional) | Live web context for questions that go beyond the document |
+| **Tavily** (runtime API call) | Powers **Fact-check with the web** (live search for each checkable claim) and optional web context in Q&A |
+
+### 🌐 Fact-check with the web (Tavily)
+A document can be internally consistent and still wrong about the world. The **Fact-check with the web** view closes that gap with a live runtime call to the [Tavily Search API](https://tavily.com):
+
+1. **Nemotron Nano** reads the document and picks up to 3 claims that can be checked publicly (market size, growth rates, benchmarks, facts about real companies) and writes a search query for each, ignoring a private or fictional company's own numbers.
+2. **Tavily** searches the live web for each claim (top results, de-duplicated, labelled `W1…Wn`).
+3. **Nemotron Super** reconciles *what the PDF says (with its page)* against *what the web says (with the source)* and returns a verdict: ✅ consistent · ⚠️ differs · 🔍 no web evidence.
+
+The UI shows both sides next to each other with the PDF page citation and clickable web sources, so a reader can see where the document disagrees with the outside world (e.g. the sample report claims 6% market growth; the web says roughly 11–15%). The Q&A tab can also pull in Tavily snippets via the sidebar toggle. Without a Tavily key the app still works; the view just explains what it needs. CLI: `python scripts/factcheck_cli.py samples/aurora_robotics_fy2025_report.pdf`.
 
 Design details worth knowing:
 
@@ -83,7 +95,7 @@ With no API key the app starts in **offline demo mode** (extractive heuristics, 
 | `NEBIUS_DEEP_MODEL` | Deep-reasoning model | Nemotron 3 Ultra |
 | `NEBIUS_EMBED_MODEL` / `NEBIUS_EMBED_BASE_URL` | Embeddings | Qwen3-Embedding-8B |
 | `DOCBRIEF_MODE` | `auto` / `live` / `mock` | `auto` |
-| `TAVILY_API_KEY` | Optional web context | – |
+| `TAVILY_API_KEY` | Enables **Fact-check with the web** + web context in Q&A (Tavily Search API) | – |
 
 All default model IDs were verified against Nebius `GET /v1/models` (Oct 28, 2026) and exercised end-to-end: `nvidia/nemotron-3-super-120b-a12b`, `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B`, `nvidia/Nemotron-3-Ultra-550b-a55b`, `Qwen/Qwen3-Embedding-8B`. If your account exposes a model under a different ID or region, just override the variables above — no code changes.
 
@@ -93,7 +105,7 @@ Note: Nemotron are reasoning models, so JSON calls use a generous `max_tokens` b
 
 ```bash
 python scripts/cli.py samples/aurora_robotics_fy2025_report.pdf -q "What is the FY2026 guidance?"
-python -m pytest -q          # 10 tests, no network / key needed
+python -m pytest -q          # 14 tests, no network / key needed
 python scripts/make_sample_pdfs.py   # regenerate the (fictional) sample PDFs
 ```
 
