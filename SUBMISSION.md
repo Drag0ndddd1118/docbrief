@@ -57,7 +57,7 @@ Python, Streamlit, NVIDIA Nemotron (Super / Nano / Ultra), Nebius Token Factory,
 
 ## Links (to fill in)
 - Public GitHub repo: https://github.com/Drag0ndddd1118/docbrief  (**** — needs `gh auth login` as Drag0ndddd1118; local commit is ready)
-- Demo video (YouTube, < 3 min): https://youtu.be/AfYK_xo4Z5c
+- Demo video (YouTube, < 3 min): https://youtu.be/0WsNXSGSV2Y
 
 ## Feedback on Nebius / NVIDIA (if the form asks)
 Token Factory's OpenAI-compatible endpoint made integration a few lines of code. It would help to have one page listing exact model IDs and which regional base URL serves each, since IDs and endpoints differ between models.
