@@ -54,7 +54,7 @@ Table/figure extraction from scanned filings (OCR), multi-document comparison (Y
 Python, Streamlit, NVIDIA Nemotron (Super / Nano / Ultra), Nebius Token Factory, Qwen3-Embedding, rank-bm25, pypdf, Tavily (optional), pytest
 
 ## Links (to fill in)
-- Public GitHub repo: https://github.com/Drag0ndddd1118/docbrief  (**NOT YET CREATED/PUSHED** — needs `gh auth login` as Drag0ndddd1118; local commit is ready)
+- Public GitHub repo: https://github.com/Drag0ndddd1118/docbrief  (**** — needs `gh auth login` as Drag0ndddd1118; local commit is ready)
 - Demo video: demo/docbrief_demo.mp4 (1:43, 1080p) · cover: demo/cover.png (upload to YouTube yourself; paste the link here)
 - Demo video (YouTube, < 3 min): <TODO>
 - Live demo URL (optional): <TODO>
