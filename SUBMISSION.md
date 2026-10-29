@@ -58,7 +58,7 @@ Table/figure extraction from scanned filings (OCR), multi-document comparison (Y
 Python, Streamlit, NVIDIA Nemotron (Super / Nano / Ultra), Nebius Token Factory, Qwen3-Embedding, rank-bm25, pypdf, Tavily Search API, pytest
 
 ## Links (to fill in)
-- Live demo (Streamlit Community Cloud): LIVE_DEMO_URL  (replace after deploy; add it to the README too)
+- Live demo (Streamlit Community Cloud): https://docbrief.streamlit.app  (replace after deploy; add it to the README too)
 - Demo video v3 (2:33, 1080p, real NVIDIA 10-K, includes the Tavily fact-check): `demo/docbrief_demo_v3.mp4` (upload to YouTube and replace the link below)
 - Public GitHub repo: https://github.com/Drag0ndddd1118/docbrief  
 - Previous demo video (v2, YouTube): https://youtu.be/0WsNXSGSV2Y

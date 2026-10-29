@@ -2,7 +2,7 @@
 
 **AI that cites, verifies, and fact-checks.** Built for the Nebius × NVIDIA Global AI Hackathon · Track: Best Apps and Agents
 
-> ### ▶ Try it live: **LIVE_DEMO_URL**
+> ### ▶ Try it live: **https://docbrief.streamlit.app**
 > The demo opens on a **real NVIDIA 10-K** (FY2026 MD&A, pulled from SEC EDGAR) with the analysis, Q&A and web fact-check **pre-computed by Nemotron + Tavily, so loading it is instant and costs nothing**. You can then ask it new questions live, or upload your own PDF (within fair-use limits).
 > 🎬 Demo video (2:33): [`demo/docbrief_demo_v3.mp4`](demo/docbrief_demo_v3.mp4) (also on YouTube, see the Devpost page)
 
@@ -110,7 +110,7 @@ Everything is overridable with `DOCBRIEF_*` variables (see `.streamlit/secrets.t
    NEBIUS_API_KEY = "…"
    TAVILY_API_KEY = "…"    # optional, enables live web fact-checks
    ```
-3. Deploy, then paste the app URL into the `LIVE_DEMO_URL` placeholder at the top of this README.
+3. Deploy, then paste the app URL into the `https://docbrief.streamlit.app` placeholder at the top of this README.
 
 ## Run it
 
