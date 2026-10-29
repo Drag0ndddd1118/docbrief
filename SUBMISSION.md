@@ -61,3 +61,7 @@ Python, Streamlit, NVIDIA Nemotron (Super / Nano / Ultra), Nebius Token Factory,
 
 ## Feedback on Nebius / NVIDIA (if the form asks)
 Token Factory's OpenAI-compatible endpoint made integration a few lines of code. It would help to have one page listing exact model IDs and which regional base URL serves each, since IDs and endpoints differ between models.
+
+## Best Use of Tavily — answer
+
+DocBrief calls the Tavily Search API at runtime in its **🌐 Fact-check with the web** view (`docbrief/tavily.py`, `docbrief/factcheck.py`). Nemotron Nano picks up to three claims in the uploaded PDF that can be checked publicly (market size, growth rates, benchmarks, public-company facts); Tavily searches the live web for each one; Nemotron Super then reconciles "PDF says" vs "web says" and returns a verdict (consistent / differs / no web evidence) with [p.N] PDF citations next to [W#] web-source links. Tavily also optionally adds live web context to chat answers. In our live test on a sample report, a claimed 6% market CAGR was flagged as differing from web sources (about 11–19%), while an e-commerce-share claim was confirmed. The Tavily client is injectable, so the whole path is covered by offline tests with a fake client.

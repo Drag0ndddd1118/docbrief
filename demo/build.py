@@ -2,7 +2,7 @@ import json, subprocess, os, re
 from PIL import Image, ImageDraw, ImageFont
 B = "build"; FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 def dur(f): return float(subprocess.check_output(["ffprobe","-v","error","-show_entries","format=duration","-of","csv=p=0",f]).decode())
-TEXT = dict(re.findall(r'\("(s\d)",\s*"((?:[^"\\]|\\.)*)"\)', open("narration.py").read()))
+TEXT = dict(re.findall(r'\("(s\w+)",\s*"((?:[^"\\]|\\.)*)"\)', open("narration.py").read()))
 M = json.load(open(f"{B}/marks.json"))
 PAD = 0.45
 # ---- end card ------------------------------------------------------------
@@ -14,21 +14,22 @@ txt(250, "📑" if False else "DocBrief", 170, (255, 255, 255))
 txt(450, "Speed-read papers & annual reports — with receipts", 52, (118, 185, 0))
 txt(580, "github.com/Drag0ndddd1118/docbrief", 60, (255, 255, 255))
 txt(700, "Open source · MIT license · Python + Streamlit", 40, (170, 180, 195))
-txt(800, "Built on NVIDIA Nemotron  ×  Nebius Token Factory", 46, (255, 255, 255))
+txt(800, "Built on NVIDIA Nemotron  ×  Nebius Token Factory  ×  Tavily", 46, (255, 255, 255))
 img.save(f"{B}/endcard.png")
 # ---- scenes: (id, [segments], opts) --------------------------------------
 # segment: ("v", start, end, speed) from raw video | ("img", path)
 scenes = [
- ("s0", [("v", 49.7, 55.2, 1)], {}),
+ ("s0", [("v", 102.2, 107.6, 1)], {}),
  ("s1", [("v", 3.6, 5.2, 1)], {"freeze": True}),
  ("s2", [("v", 3.6, 5.2, 1)], {"freeze": True, "box": (28, 250, 336, 262)}),
- ("s3", [("v", 5.94, 24.6, 4), ("v", 24.9, 29.9, 1)], {"label": (0, 4.7, "Live Nemotron call — thinking time sped up 4×")}),
- ("s4", [("v", 27.4, 30.4, 1), ("v", 31.2, 35.4, 1)], {}),
- ("s5", [("v", 35.8, 44.4, 1)], {"freeze": True}),
- ("s6", [("v", 47.4, 58.0, 1)], {"freeze": True}),
- ("s7", [("v", 58.5, 62.7, 1)], {"freeze": True}),
- ("s8", [("v", 64.4, 67.0, 1), ("v", 71.7, 78.8, 1)], {"freeze": True}),
- ("s9", [("v", 79.8, 83.6, 1), ("img", "build/endcard.png")], {"endcard": True}),
+ ("s3", [("v", 6.0, 25.2, 4), ("v", 25.5, 30.5, 1)], {"label": (0, 4.7, "Live Nemotron call — thinking time sped up 4×")}),
+ ("s4", [("v", 26.8, 30.0, 1), ("v", 31.9, 36.1, 1)], {}),
+ ("s5", [("v", 36.4, 45.8, 1)], {"freeze": True}),
+ ("sT", [("v", 47.5, 48.4, 0.12), ("v", 48.5, 79.5, 4), ("v", 80.0, 91.4, 1)], {"label": (7.7, 15.3, "Live Nano → Tavily web search → Super — wait sped up 4×")}),
+ ("s6", [("v", 97.0, 107.6, 1)], {"freeze": True}),
+ ("s7", [("v", 108.0, 112.3, 1)], {"freeze": True}),
+ ("s8", [("v", 113.9, 116.6, 1), ("v", 128.0, 135.5, 1)], {"freeze": True}),
+ ("s9", [("v", 136.2, 139.6, 1), ("img", "build/endcard.png")], {"endcard": True}),
 ]
 starts, t = {}, 0.0
 clips = []
@@ -112,5 +113,5 @@ Style: Big,DejaVu Sans,86,&H00FFFFFF,&H000000FF,&H00000000,&H80000000,-1,0,0,0,1
 Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text
 """
 open(f"{B}/cap.ass", "w").write(hdr + "\n".join(ev) + "\n")
-subprocess.run(["ffmpeg","-v","error","-y","-i",f"{B}/video_nosound.mp4","-i",f"{B}/narration.wav","-vf",f"ass={B}/cap.ass","-c:v","libx264","-crf","18","-preset","medium","-pix_fmt","yuv420p","-c:a","aac","-b:a","160k","-shortest","-movflags","+faststart","demo.mp4"],check=True)
-print("FINAL", dur("demo.mp4"))
+subprocess.run(["ffmpeg","-v","error","-y","-i",f"{B}/video_nosound.mp4","-i",f"{B}/narration.wav","-vf",f"ass={B}/cap.ass","-c:v","libx264","-crf","18","-preset","medium","-pix_fmt","yuv420p","-c:a","aac","-b:a","160k","-shortest","-movflags","+faststart","docbrief_demo_v2.mp4"],check=True)
+print("FINAL", dur("docbrief_demo_v2.mp4"))
