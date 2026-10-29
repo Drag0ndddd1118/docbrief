@@ -7,12 +7,14 @@
 DocBrief
 
 ## Elevator pitch / tagline (≤ 200 chars)
-Speed-read any research paper or annual report: summary, key points, page-cited answers in English or 中文, and a check that flags any number not actually in the PDF. Powered by NVIDIA Nemotron on Nebius.
+Ask any 10-K. Get the page. AI that cites every answer, verifies every number against the PDF, and fact-checks claims on the live web (Tavily). NVIDIA Nemotron on Nebius.
 
 ## Inspiration
 I study financial engineering, and most of my week is spent digging through 10-Ks, earnings decks and arXiv papers. "Chat with your PDF" tools are fast but they quietly invent numbers — which is unacceptable when the number is revenue guidance. I wanted a reader I could trust: fast like an LLM, but with receipts. As a bilingual student I also wanted to ask questions in Chinese about English documents.
 
 ## What it does
+The hosted demo opens on a **real NVIDIA FY2026 10-K excerpt (SEC EDGAR)** whose analysis, Q&A and web fact-check are pre-computed, so judges get an instant, zero-cost, no-signup experience, and can still ask new questions live or upload their own PDF within fair-use limits (per-session quotas, size/page caps, and a shared daily budget protect the API key).
+
 Upload a PDF (paper or financial report). DocBrief returns:
 - a TL;DR and structured summary,
 - key points and risks/limitations, each with its source page,
@@ -44,7 +46,7 @@ Optional toggles: **Deep reasoning** (Nemotron Ultra) and **live web context in 
 - Every number in the metrics table is machine-verified against the source.
 - Seamless bilingual Q&A over English documents.
 - Uses three Nemotron tiers for the right job each (cost/latency-aware routing).
-- Runs fully offline for demos and CI; 14 passing tests (including the Tavily path with a fake client).
+- Runs fully offline for demos and CI; 27 passing tests (including the Tavily path with a fake client, the abuse-protection guard and a Streamlit AppTest smoke test).
 
 ## What we learned
 Smaller, faster models (Nemotron Nano) are ideal for the map step and query rewriting, while the larger models should only see retrieved evidence. Verification beats prompting for factual reliability.
@@ -56,8 +58,10 @@ Table/figure extraction from scanned filings (OCR), multi-document comparison (Y
 Python, Streamlit, NVIDIA Nemotron (Super / Nano / Ultra), Nebius Token Factory, Qwen3-Embedding, rank-bm25, pypdf, Tavily Search API, pytest
 
 ## Links (to fill in)
-- Public GitHub repo: https://github.com/Drag0ndddd1118/docbrief  (**** — needs `gh auth login` as Drag0ndddd1118; local commit is ready)
-- Demo video (YouTube, < 3 min): https://youtu.be/0WsNXSGSV2Y
+- Live demo (Streamlit Community Cloud): LIVE_DEMO_URL  (replace after deploy; add it to the README too)
+- Demo video v3 (2:33, 1080p, real NVIDIA 10-K, includes the Tavily fact-check): `demo/docbrief_demo_v3.mp4` (upload to YouTube and replace the link below)
+- Public GitHub repo: https://github.com/Drag0ndddd1118/docbrief  
+- Previous demo video (v2, YouTube): https://youtu.be/0WsNXSGSV2Y
 
 ## Feedback on Nebius / NVIDIA (if the form asks)
 Token Factory's OpenAI-compatible endpoint made integration a few lines of code. It would help to have one page listing exact model IDs and which regional base URL serves each, since IDs and endpoints differ between models.

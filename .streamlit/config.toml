@@ -1,8 +1,17 @@
 [theme]
-primaryColor = "#76b900"
-backgroundColor = "#0e1117"
-secondaryBackgroundColor = "#1a1f2b"
-textColor = "#fafafa"
+base = "dark"
+primaryColor = "#2EA043"
+backgroundColor = "#0D1117"
+secondaryBackgroundColor = "#161B22"
+textColor = "#E6EDF3"
+font = "sans serif"
+
+[server]
+# hard framework-level cap on uploads (MB); the app also enforces DOCBRIEF_MAX_PDF_MB
+maxUploadSize = 15
 
 [browser]
 gatherUsageStats = false
+
+[client]
+toolbarMode = "minimal"

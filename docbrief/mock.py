@@ -92,7 +92,7 @@ class MockEngine:
             engine=self.describe(),
         )
 
-    def build_retriever(self, chunks: list[Chunk]) -> Retriever:
+    def build_retriever(self, chunks: list[Chunk], matrix=None) -> Retriever:
         return Retriever(chunks, embedder=None)
 
     def answer(

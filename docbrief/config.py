@@ -16,6 +16,21 @@ def _load_dotenv() -> None:
         pass
 
 
+def _secret(key: str) -> str:
+    """Environment first, then Streamlit secrets (Streamlit Community Cloud: App settings -> Secrets)."""
+    v = os.environ.get(key)
+    if v:
+        return v
+    if os.environ.get("DOCBRIEF_NO_DOTENV"):
+        return ""
+    try:
+        import streamlit as st
+
+        return str(st.secrets.get(key, "") or "")
+    except Exception:  # no secrets file / not running under streamlit
+        return ""
+
+
 @dataclass(frozen=True)
 class Settings:
     api_key: str
@@ -36,7 +51,7 @@ class Settings:
     @classmethod
     def from_env(cls) -> "Settings":
         _load_dotenv()
-        g = lambda k, d="": (os.environ.get(k) or d).strip()  # noqa: E731
+        g = lambda k, d="": (_secret(k) or d).strip()  # noqa: E731
         api_key = g("NEBIUS_API_KEY")
         requested = g("DOCBRIEF_MODE", "auto").lower()
         if requested == "mock":

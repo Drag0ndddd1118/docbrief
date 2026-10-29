@@ -49,3 +49,15 @@ def test_live_path(monkeypatch):
     assert r.mode.startswith("hybrid")
     ans = eng.answer(doc, r, "2026年的收入指引是多少？", deep=True)
     assert "[p.4]" in ans.text and "fast" in eng.llm.log and "deep" in eng.llm.log  # query rewrite (fast) + deep answer
+
+
+def test_analyze_cost_cap_truncates_long_documents(monkeypatch):
+    monkeypatch.setenv("NEBIUS_API_KEY", "fake")
+    eng = LiveEngine(Settings.from_env())
+    eng.llm = FakeLLM()
+    doc = load_pdf(REPORT.read_bytes(), REPORT.name)
+    eng.analyze(doc, max_chars=1500)
+    assert any("cost cap" in w for w in doc.warnings)
+    doc2 = load_pdf(REPORT.read_bytes(), REPORT.name)
+    eng.analyze(doc2)
+    assert not any("cost cap" in w for w in doc2.warnings)

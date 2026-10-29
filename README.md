@@ -1,29 +1,39 @@
-# 📑 DocBrief — speed-read any paper or annual report, with receipts
+# 📑 DocBrief — Ask any 10-K. Get the page.
 
-**Built for the Nebius × NVIDIA Global AI Hackathon · Track: Best Apps and Agents**
+**AI that cites, verifies, and fact-checks.** Built for the Nebius × NVIDIA Global AI Hackathon · Track: Best Apps and Agents
 
-Upload a research paper or a financial report (PDF) and DocBrief gives you, in seconds:
+> ### ▶ Try it live: **LIVE_DEMO_URL**
+> The demo opens on a **real NVIDIA 10-K** (FY2026 MD&A, pulled from SEC EDGAR) with the analysis, Q&A and web fact-check **pre-computed by Nemotron + Tavily, so loading it is instant and costs nothing**. You can then ask it new questions live, or upload your own PDF (within fair-use limits).
+> 🎬 Demo video (2:33): [`demo/docbrief_demo_v3.mp4`](demo/docbrief_demo_v3.mp4) (also on YouTube, see the Devpost page)
 
-- a **TL;DR + structured summary**,
-- **key points and risks / limitations**, each tagged with its source page,
-- a **key-metrics table** (revenue, margins, EPS, cash flow, guidance… or accuracy/dataset numbers for papers) where **every number is checked against the raw PDF text** and flagged `⚠️ not found — verify` if the model made it up,
-- a **chat that answers in English or 中文** and cites the pages it used.
+![DocBrief demo](docs/demo.gif)
 
-It is powered by **NVIDIA Nemotron open models served on Nebius Token Factory**.
+| | |
+|---|---|
+| 🎯 **Cites every answer** | Hybrid retrieval (BM25 + Qwen3 embeddings) returns the exact passages; every claim carries a `[p.N]` page citation. |
+| ✅ **Verifies every number** | Each metric the model reports must literally appear in the PDF text, otherwise it is flagged `⚠️ not found — verify`. |
+| 🌐 **Fact-checks the web** | Nemotron Nano picks checkable claims, **Tavily** searches the live web, Nemotron Super reconciles *PDF vs web* with sources. |
+| 🇨🇳 **Bilingual** | Ask in English or 中文 about an English filing; answers cite pages either way. |
 
-![summary](docs/screenshots/02_summary.png)
+![home](docs/screenshots/01_home.png)
 ![metrics](docs/screenshots/03_metrics.png)
+![fact-check](docs/screenshots/05_factcheck.png)
 ![chat](docs/screenshots/04_qa.png)
 
-## Why
+## How it maps to the judging criteria
 
-Analysts, students and researchers drown in 80-page PDFs. Generic "chat with your PDF" tools hallucinate numbers — fatal when the document is a 10-K. DocBrief treats the PDF as the only source of truth: retrieval-grounded answers, page citations, and an automatic number-grounding check.
+| Criterion | What to look at |
+|---|---|
+| **Technological implementation** | Three **NVIDIA Nemotron** tiers on **Nebius Token Factory**, each used for what it is good at: **Nano** (30B-A3B) for claim planning, query rewriting and the map step over long filings; **Super** (120B-A12B) for analysis, grounded Q&A and PDF-vs-web reconciliation; **Ultra** (550B) behind a "Deep reasoning" toggle. **Qwen3-Embedding-8B** (Nebius) powers dense retrieval, fused with BM25 by Reciprocal Rank Fusion. **Tavily** is a runtime dependency of the fact-check. Verification is code, not prompting: a number-grounding check plus tolerant JSON parsing. 27 offline tests (including the live engine with a fake LLM and a Streamlit AppTest smoke test). |
+| **Design / UX** | One-click preloaded real filing, three feature cards, metric cards with `found in PDF` badges, side-by-side *PDF says / web says* fact-check cards, page chips and expandable source passages, EN/中文 toggle, a visible fair-use meter. |
+| **Impact** | Analysts, students and investors lose hours to 80-page PDFs, and generic chat-with-PDF tools quietly invent numbers, which is fatal for a 10-K. DocBrief makes the reader's trust checkable: each answer links to its page, each figure to the raw text, each public claim to the web. |
+| **Idea** | A "reader with receipts": retrieval-grounded answers + deterministic number verification + live web reconciliation, in one flow, bilingual, and safe to host publicly on a small budget. |
 
 ## How it works
 
 ```mermaid
 flowchart LR
-    U[PDF upload] --> P[pypdf extraction<br/>page-marked text]
+    U[PDF upload or preloaded 10-K] --> P[pypdf extraction<br/>page-marked text]
     P --> C[Page-aware chunking<br/>1100 chars / 150 overlap]
     P --> A{Doc length}
     A -- short --> S[Nemotron 3 Super<br/>single-pass analysis → JSON]
@@ -36,11 +46,15 @@ flowchart LR
     Q[Question EN / 中文] --> W[Nemotron Nano<br/>rewrite to English search terms]
     W --> H
     H --> G[Nemotron 3 Super / Ultra<br/>answer with page citations]
-    T[Tavily live web search] --> F[Nemotron 3 Super<br/>reconcile PDF vs web]
-    A2[Nemotron 3 Nano<br/>pick checkable claims] --> T
+    A2[Nemotron 3 Nano<br/>pick checkable claims] --> T[Tavily live web search]
+    T --> F[Nemotron 3 Super<br/>reconcile PDF vs web]
     F --> UI
     T -.-> G
     G --> UI
+    K[(Pre-computed cache<br/>showcase/*.json)] -.-> UI
+    L[Guard: session quotas<br/>+ daily budget + size caps] -.-> S
+    L -.-> G
+    L -.-> T
 ```
 
 | Piece | What it does |
@@ -68,6 +82,35 @@ Design details worth knowing:
 - **Map-reduce** for long filings: Nano analyses 36k-char sections, Super merges the notes.
 - **Robust JSON**: strips `<think>` blocks from reasoning models, extracts the first balanced JSON object, retries once.
 - **Privacy**: PDFs are processed in memory; only relevant passages are sent to the model.
+
+
+## The showcase document
+
+The preloaded demo is **NVIDIA Corporation's Form 10-K for fiscal 2026** (period ended Jan 25, 2026, filed 2026-02-25, accession 0001045810-26-000021), **Item 7 (MD&A) and the start of Item 7A, as an 11-page excerpt** (page 1 is a disclosure cover). Source: [SEC EDGAR](https://www.sec.gov/Archives/edgar/data/1045810/000104581026000021/nvda-20260125.htm). It is a public filing; page numbers in the app refer to the excerpt.
+
+The analysis, four example questions (including one in Chinese) and the Tavily fact-check were computed once with `scripts/build_showcase.py` and shipped as `showcase/nvidia_fy2026_mdna.json` (embeddings included, validated by a chunk hash). Serving them costs **zero API calls**.
+
+## Public-demo protections (the key is shared)
+
+| Layer | Default |
+|---|---|
+| Pre-computed showcase | Summary, metrics, fact-check and 4 questions served from cache: free |
+| Per-session quotas | 3 analyses · 10 questions · 2 deep (Ultra) questions · 2 live fact-checks |
+| Input limits | PDF ≤ 15 MB (also enforced by Streamlit `maxUploadSize`), ≤ 80 pages, ≤ 150k analysed characters (map-reduce capped), ≤ 450 embedded chunks, questions ≤ 600 characters |
+| Global daily budget | 400 units per UTC day shared by all visitors (analysis 12, question 2, deep 8, fact-check 8). When it is spent the app keeps serving pre-computed results only |
+| Secrets | Keys come from `st.secrets` / environment only, never from the repo |
+
+Everything is overridable with `DOCBRIEF_*` variables (see `.streamlit/secrets.toml.example`). Without any key the app runs in offline mock mode.
+
+## Deploy on Streamlit Community Cloud
+
+1. Push the repo (already on GitHub), then in [share.streamlit.io](https://share.streamlit.io) choose **New app → this repo → branch `main` → main file `app.py`**. `.python-version` (3.12) and the pinned `requirements.txt` are picked up automatically.
+2. **Advanced settings → Secrets**:
+   ```toml
+   NEBIUS_API_KEY = "…"
+   TAVILY_API_KEY = "…"    # optional, enables live web fact-checks
+   ```
+3. Deploy, then paste the app URL into the `LIVE_DEMO_URL` placeholder at the top of this README.
 
 ## Run it
 
@@ -105,22 +148,23 @@ Note: Nemotron are reasoning models, so JSON calls use a generous `max_tokens` b
 
 ```bash
 python scripts/cli.py samples/aurora_robotics_fy2025_report.pdf -q "What is the FY2026 guidance?"
-python -m pytest -q          # 14 tests, no network / key needed
+pip install -r requirements-dev.txt && python -m pytest -q   # 27 tests, no network / key needed
 python scripts/make_sample_pdfs.py   # regenerate the (fictional) sample PDFs
 ```
 
 ## Repo layout
 
 ```
-app.py                 Streamlit UI
-docbrief/              config · pdf_loader · chunking · retrieval · llm · live · mock · metrics · prompts · report
-samples/               two fictional sample PDFs (a company annual report, an ML paper)
-scripts/               cli.py · check_nebius.py · make_sample_pdfs.py
+app.py                 Streamlit UI (landing, preloaded showcase, upload flow)
+docbrief/              config · pdf_loader · chunking · retrieval · llm · live · mock · metrics · prompts · report · tavily · factcheck · guard · showcase
+samples/               real NVIDIA 10-K excerpt + two fictional sample PDFs (a company annual report, an ML paper)
+showcase/              pre-computed analysis / Q&A / fact-check cache for the preloaded 10-K
+scripts/               cli.py · build_showcase.py · check_nebius.py · factcheck_cli.py · make_sample_pdfs.py
 tests/                 core + live-engine-with-fake-LLM tests
 docs/screenshots/      UI screenshots
 ```
 
-The sample documents are entirely fictional (Aurora Robotics, EarnRAG) and exist only for demos.
+The Aurora Robotics and EarnRAG samples are entirely fictional; the NVIDIA excerpt is a real public SEC filing.
 
 ## License
 

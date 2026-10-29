@@ -27,11 +27,11 @@ def _claim_context(doc: Document, a: Analysis) -> str:
     return json.dumps(brief, ensure_ascii=False)
 
 
-def extract_claims(llm, doc: Document, a: Analysis, n: int = 3) -> list[dict]:
+def extract_claims(llm, doc: Document, a: Analysis, n: int = 3, focus: str = "") -> list[dict]:
     d = llm.chat_json(
         [
             {"role": "system", "content": prompts.CLAIMS_SYSTEM.format(n=n)},
-            {"role": "user", "content": f"Document: {doc.name}\n\n{_claim_context(doc, a)}"},
+            {"role": "user", "content": (f"Focus on: {focus}\n\n" if focus else "") + f"Document: {doc.name}\n\n{_claim_context(doc, a)}"},
         ],
         tier="fast",
         max_tokens=6000,
@@ -44,9 +44,9 @@ def extract_claims(llm, doc: Document, a: Analysis, n: int = 3) -> list[dict]:
     return out
 
 
-def run_fact_check(llm, doc: Document, a: Analysis, search: SearchFn, lang_name: str = "English", n: int = 3) -> list[FactCheck]:
+def run_fact_check(llm, doc: Document, a: Analysis, search: SearchFn, lang_name: str = "English", n: int = 3, focus: str = "") -> list[FactCheck]:
     """Returns one FactCheck per claim (≤ n). `search(query, start_label)` is injected (Tavily in production, a fake in tests)."""
-    claims = extract_claims(llm, doc, a, n)
+    claims = extract_claims(llm, doc, a, n, focus)
     checks: list[FactCheck] = []
     nxt = 1
     for c in claims:

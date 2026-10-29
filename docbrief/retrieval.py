@@ -31,13 +31,16 @@ Embedder = Callable[[Sequence[str]], np.ndarray]
 
 
 class Retriever:
-    def __init__(self, chunks: list[Chunk], embedder: Optional[Embedder] = None):
+    def __init__(self, chunks: list[Chunk], embedder: Optional[Embedder] = None, matrix: Optional[np.ndarray] = None):
         self.chunks = chunks
         self.bm25 = BM25Okapi([tokenize(c.text) or ["_"] for c in chunks])
         self.embedder = embedder
         self.matrix: Optional[np.ndarray] = None
         self.embed_error: Optional[str] = None
-        if embedder is not None:
+        if matrix is not None and len(matrix) == len(chunks):  # pre-computed chunk embeddings (shipped demo cache)
+            m = np.asarray(matrix, dtype=np.float32)
+            self.matrix = m / (np.linalg.norm(m, axis=1, keepdims=True) + 1e-9)
+        elif embedder is not None:
             try:
                 m = np.asarray(embedder([c.text for c in chunks]), dtype=np.float32)
                 self.matrix = m / (np.linalg.norm(m, axis=1, keepdims=True) + 1e-9)

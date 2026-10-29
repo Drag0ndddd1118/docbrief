@@ -1,0 +1,5 @@
+-r requirements.txt
+# only needed to regenerate the sample PDFs / run tests / record demo assets
+reportlab==5.1.0
+pillow==13.0.0
+pytest==9.2.0

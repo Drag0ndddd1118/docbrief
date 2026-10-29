@@ -12,3 +12,6 @@ __pycache__/
 demo/build/
 demo/*.mp4
 .tavily_key
+
+# local-only data & secrets
+data_src/

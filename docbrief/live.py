@@ -73,10 +73,20 @@ class LiveEngine:
         return f"Nebius Token Factory · {self.s.model} (+ {self.s.fast_model.split('/')[-1]} for long docs)"
 
     # ---- analysis -------------------------------------------------------
-    def analyze(self, doc: Document, lang: str = "en", progress=None) -> Analysis:
+    def analyze(self, doc: Document, lang: str = "en", progress=None, max_chars: int | None = None) -> Analysis:
         lname = LANG_NAME.get(lang, "English")
         suffix = f"\nWrite all prose fields in {lname}; keep metric values exactly as written in the document."
-        text = doc.marked_text()
+        pages = doc.pages
+        if max_chars and doc.n_chars > max_chars:  # cost cap: analyse the first pages that fit; the rest stays searchable in Q&A
+            used, keep = 0, 0
+            for t in doc.pages:
+                if used + len(t) > max_chars and keep:
+                    break
+                used += len(t)
+                keep += 1
+            pages = doc.pages[:keep]
+            doc.warnings.append(f"Long document: the summary covers pages 1-{keep} of {doc.n_pages} (cost cap). Q&A still searches every page.")
+        text = "\n\n".join(f"[[Page {i}]]\n{t}" for i, t in enumerate(pages, 1))
         if len(text) <= SINGLE_PASS_CHARS:
             msgs = [
                 {"role": "system", "content": prompts.ANALYZE_SYSTEM + suffix},
@@ -87,7 +97,7 @@ class LiveEngine:
 
         # map-reduce for long documents: fast Nemotron per section, main Nemotron merges
         sections, buf = [], ""
-        for pno, ptxt in enumerate(doc.pages, 1):
+        for pno, ptxt in enumerate(pages, 1):
             piece = f"[[Page {pno}]]\n{ptxt}\n\n"
             if buf and len(buf) + len(piece) > SECTION_CHARS:
                 sections.append(buf)
@@ -127,14 +137,14 @@ class LiveEngine:
         return _to_analysis(d, doc, self.describe() + " · map-reduce")
 
     # ---- web fact-check (Tavily + Nemotron) -----------------------------
-    def fact_check(self, doc: Document, analysis: Analysis, search, lang: str = "en", n: int = 3):
+    def fact_check(self, doc: Document, analysis: Analysis, search, lang: str = "en", n: int = 3, focus: str = ""):
         from .factcheck import run_fact_check
 
-        return run_fact_check(self.llm, doc, analysis, search, LANG_NAME.get(lang, "English"), n)
+        return run_fact_check(self.llm, doc, analysis, search, LANG_NAME.get(lang, "English"), n, focus)
 
     # ---- retrieval + Q&A ------------------------------------------------
-    def build_retriever(self, chunks: list[Chunk]) -> Retriever:
-        return Retriever(chunks, embedder=self.llm.embed)
+    def build_retriever(self, chunks: list[Chunk], matrix=None) -> Retriever:
+        return Retriever(chunks, embedder=self.llm.embed, matrix=matrix)
 
     def _rewrite(self, q: str) -> str:
         if not re.search(r"[^\x00-\x7f]", q):
